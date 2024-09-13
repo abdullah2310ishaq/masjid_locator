@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "216823763902",
+    "project_id": "authentication-6dfba",
+    "storage_bucket": "authentication-6dfba.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:216823763902:android:d25cd7101a2c3ebc4a5fef",
+        "android_client_info": {
+          "package_name": "com.example.masjid_locator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB43Fg0_TAHagNCqAiIFQCLwloX0ewncaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
