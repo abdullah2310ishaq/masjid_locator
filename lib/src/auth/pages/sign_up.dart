@@ -1,24 +1,17 @@
-import 'package:delightful_toast/delight_toast.dart';
-import 'package:delightful_toast/toast/components/toast_card.dart';
-import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:masjid_locator/src/services/auth_service.dart';
+import 'package:masjid_locator/src/auth/pages/otp_screen.dart';
 import 'package:masjid_locator/src/widgets/custom_text_field.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
-
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
-
-  String _selectedRole = 'user';  
+  String _selectedRole = 'user'; // Default role is user
 
   @override
   Widget build(BuildContext context) {
@@ -32,102 +25,61 @@ class _SignUpPageState extends State<SignUpPage> {
             children: <Widget>[
               const Text(
                 'Create an Account',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Sign up to get started!',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Custom Text Fields for Email and Password
-              CustomTextField(
-                controller: _emailController,
-                labelText: 'Email',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+              
+              CustomTextField(
+                controller: _nameController,
+                labelText: 'Full Name',
+                keyboardType: TextInputType.name,
+                labelColor: Colors.blue,
+              ),
+              const SizedBox(height: 20),
+              
+              CustomTextField(
+                controller: _phoneController,
+                labelText: 'Phone Number',
+                keyboardType: TextInputType.phone,
+                labelColor: Colors.blue,
+              ),
+              const SizedBox(height: 20),
+
               CustomTextField(
                 controller: _passwordController,
                 labelText: 'Password',
                 obscureText: true,
+                labelColor: Colors.blue, 
+                keyboardType: TextInputType.visiblePassword,
               ),
               const SizedBox(height: 20),
 
-              // Dropdown for role selection with enhanced styling
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(10.0),
+              DropdownButtonFormField<String>(
+                value: _selectedRole,
+                decoration: const InputDecoration(
+                  labelText: 'Select Role',
+                  border: OutlineInputBorder(),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedRole,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'user',
-                        child: Text('Regular User'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'muadhin',
-                        child: Text('Muadhin'),
-                      ),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedRole = newValue!;
-                      });
-                    },
-                    isExpanded: true,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
+                items: const [
+                  DropdownMenuItem(value: 'user', child: Text('Regular User')),
+                  DropdownMenuItem(value: 'muadhin', child: Text('Muadhin')),
+                ],
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedRole = newValue!;
+                  });
+                },
               ),
               const SizedBox(height: 40),
 
-              // Sign-Up Button
               ElevatedButton(
-                onPressed: _signUp,
-                child: const Text('Sign Up'),
+                onPressed: _sendOTP,
+                child: const Text('Send OTP'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                      vertical: 15.0, horizontal: 100.0),
-                     backgroundColor: Colors.transparent,
-                  side: BorderSide(color: Colors.black, width: 1.0),
+                    vertical: 15.0, horizontal: 100.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Login Link
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/login');
-                },
-                child: const Text(
-                  "Already have an account? Login",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
                   ),
                 ),
               ),
@@ -138,40 +90,33 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _signUp() async {
-    String email = _emailController.text.trim();
+  // Send OTP to the user's phone number
+  void _sendOTP() {
+    String name = _nameController.text.trim();
+    String phone = _phoneController.text.trim();
     String password = _passwordController.text.trim();
-    if (email.isNotEmpty && password.isNotEmpty) {
-      User? user = await _authService.signUpWithEmail(email, password, _selectedRole);
-      if (user != null) {
-        _showToast(text: 'Registered successfully as ${user.email}', icon: Icons.check_circle);
-        Navigator.pushReplacementNamed(context, '/login');
-      } else {
-        _showToast(text: 'Sign-up failed. Try again!', icon: Icons.error);
-      }
+
+    if (name.isNotEmpty && phone.isNotEmpty && password.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OTPScreen(
+            phoneNumber: phone,
+            name: name,
+            password: password,
+            role: _selectedRole, 
+            // verificationId: '',
+          ),
+        ),
+      );
+    } else {
+      _showSnackbar(context, 'Please fill out all fields.');
     }
   }
 
-  void _showToast({required String text, IconData icon = Icons.info}) {
-    try {
-      DelightToastBar(
-        autoDismiss: true,
-        position: DelightSnackbarPosition.top,
-        builder: (context) {
-          return ToastCard(
-            leading: Icon(icon, size: 28),
-            title: Text(
-              text,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-              ),
-            ),
-          );
-        },
-      ).show(context);
-    } catch (e) {
-      print(e);
-    }
+  // Display SnackBar messages
+  void _showSnackbar(BuildContext context, String message) {
+    final snackBar = SnackBar(content: Text(message), backgroundColor: Colors.red);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

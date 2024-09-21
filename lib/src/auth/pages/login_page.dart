@@ -1,21 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:masjid_locator/src/auth/pages/sign_up.dart';
+import 'package:masjid_locator/src/auth/pages/otp_screen.dart';
+import 'package:masjid_locator/src/auth/pages/sign_up.dart'; // Import the SignUpPage
 import 'package:masjid_locator/src/services/auth_service.dart';
 import 'package:masjid_locator/src/widgets/custom_text_field.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -28,62 +25,44 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Text(
-                'Welcome Back!',
+                'Login with OTP',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'Login to continue',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Custom Text Fields for Email and Password
-              CustomTextField(
-                controller: _emailController,
-                labelText: 'Email',
-              ),
               const SizedBox(height: 20),
+
+              // Phone Number Field
               CustomTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-                obscureText: true,
+                controller: _phoneController,
+                labelText: 'Phone Number',
+                keyboardType: TextInputType.phone, 
+                labelColor: Colors.blue,
               ),
               const SizedBox(height: 40),
 
-              // Login Button
               ElevatedButton(
-                onPressed: _login,
-                child: const Text('Login'),
+                onPressed: _sendOTP,
+                child: _isLoading ? CircularProgressIndicator() : Text('Send OTP'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 15.0, horizontal: 100.0),
-                  backgroundColor: Colors.transparent,
-                  side: const BorderSide(color: Colors.black, width: 2.0),
+                  padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 100.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
                 ),
               ),
               const SizedBox(height: 20),
 
+              // Link to Sign Up Page
               GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SignUpPage()),
+                    MaterialPageRoute(
+                      builder: (context) => SignUpPage(),
+                    ),
                   );
                 },
                 child: const Text(
@@ -102,41 +81,44 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-void _login() async {
-  String email = _emailController.text.trim();
-  String password = _passwordController.text.trim();
-  if (email.isNotEmpty && password.isNotEmpty) {
-    User? user = await _authService.loginWithEmail(email, password);
-    if (user != null) {
-      // Fetch the user's role from Firestore
-      DocumentSnapshot? userDoc = await _authService.getUserData(user.uid);
-      if (userDoc != null) {
-        String role = userDoc['role'];
+  // Send OTP to user's phone number
+  void _sendOTP() async {
+    String phone = _phoneController.text.trim();
 
-        // Show a snackbar for successful login
-        _showSnackbar(context, 'Logged in as ${user.email}');
+    if (phone.isNotEmpty) {
+      setState(() {
+        _isLoading = true;
+      });
 
-        // Route based on the user's role
-        if (role == 'muadhin') {
-          Navigator.pushReplacementNamed(context, '/muadhinHome');
-        } else {
-          Navigator.pushReplacementNamed(context, '/userHome');
-        }
-      } else {
-        _showSnackbar(context, 'Failed to fetch user role.');
+      try {
+        await _authService.sendOTP(phone, (verificationId) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OTPScreen(
+                phoneNumber: phone,
+                name: '',
+                password: '', // For login, we do not need the name and password
+                role: '', // Role is not needed for login
+                // verificationId: verificationId, // Pass verification ID
+              ),
+            ),
+          );
+        });
+      } catch (e) {
+        _showSnackbar('Failed to send OTP: ${e.toString()}');
       }
+
+      setState(() {
+        _isLoading = false;
+      });
     } else {
-      _showSnackbar(context, 'Login failed. Check credentials.');
+      _showSnackbar('Please enter a valid phone number.');
     }
   }
-}
 
-
-  void _showSnackbar(BuildContext context, String message) {
-    final snackBar = SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.green,
-    );
+  void _showSnackbar(String message) {
+    final snackBar = SnackBar(content: Text(message), backgroundColor: Colors.red);
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

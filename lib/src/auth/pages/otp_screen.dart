@@ -1,18 +1,25 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:masjid_locator/src/services/auth_service.dart';
+import 'package:masjid_locator/src/models/user_model.dart';
 
 class OTPScreen extends StatefulWidget {
   final String phoneNumber;
-  OTPScreen(this.phoneNumber);
+  final String name;
+  final String password;
+  final String role;
+
+  OTPScreen({required this.phoneNumber, required this.name, required this.password, required this.role});
 
   @override
   _OTPScreenState createState() => _OTPScreenState();
 }
 
 class _OTPScreenState extends State<OTPScreen> {
-  String? _verificationId;
+  final AuthService _authService = AuthService();
   final TextEditingController _otpController = TextEditingController();
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  String? _verificationId;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -20,45 +27,42 @@ class _OTPScreenState extends State<OTPScreen> {
     _sendOTP();
   }
 
-  void _sendOTP() async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: widget.phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        // Auto-sign in the user in case the OTP is automatically detected
-        await _auth.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        print('Verification failed: ${e.message}');
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        setState(() {
-          _verificationId = verificationId;
-        });
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        setState(() {
-          _verificationId = verificationId;
-        });
-      },
-    );
+  // Send OTP
+  void _sendOTP() {
+    _authService.sendOTP(widget.phoneNumber, (verificationId) {
+      setState(() {
+        _verificationId = verificationId;
+      });
+    });
   }
 
+  // Verify OTP and register the user
   void _verifyOTP() async {
     String otp = _otpController.text.trim();
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: _verificationId!,
-      smsCode: otp,
-    );
+    if (_verificationId != null && otp.isNotEmpty) {
+      setState(() {
+        _isLoading = true;
+      });
 
-    try {
-      await _auth.signInWithCredential(credential);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logged in successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to log in')),
-      );
+      User? user = await _authService.verifyOTP(_verificationId!, otp);
+      if (user != null) {
+        UserModel newUser = UserModel(
+          id: user.uid,
+          name: widget.name,
+          phoneNumber: widget.phoneNumber,
+          role: widget.role,
+          password: widget.password,
+        );
+        await _authService.registerUser(newUser);
+
+        Navigator.pushReplacementNamed(context, widget.role == 'muadhin' ? '/muadhinHome' : '/userHome');
+      } else {
+        _showSnackbar('Invalid OTP');
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -71,19 +75,43 @@ class _OTPScreenState extends State<OTPScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text(
+              'Please enter the OTP sent to your phone',
+              style: TextStyle(fontSize: 18, color: Colors.black),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
             TextField(
               controller: _otpController,
-              decoration: InputDecoration(labelText: 'OTP'),
+              decoration: InputDecoration(
+                labelText: 'OTP',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+
             ElevatedButton(
-              onPressed: _verifyOTP,
-              child: Text('Verify OTP'),
+              onPressed: _isLoading ? null : _verifyOTP,
+              child: _isLoading ? CircularProgressIndicator() : Text('Verify OTP'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 100),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _showSnackbar(String message) {
+    final snackBar = SnackBar(content: Text(message), backgroundColor: Colors.red);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

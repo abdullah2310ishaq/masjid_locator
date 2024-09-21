@@ -1,50 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:masjid_locator/src/services/auth_service.dart';
+import 'package:masjid_locator/src/models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
-  String? _role;
+  UserModel? _userModel;
   final AuthService _authService = AuthService();
 
   User? get user => _user;
-  String? get role => _role;
+  UserModel? get userModel => _userModel;
+  String get role => _userModel?.role ?? ''; // Fetch the role from UserModel
 
   AuthProvider() {
-    _authService.authStateChanges().listen((User? user) {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
       _user = user;
       if (_user != null) {
-        _fetchUserRole(_user!.uid);
+        _fetchUserData();  // Fetch user data from Firestore
       }
       notifyListeners();
     });
   }
 
-Future<void> _fetchUserRole(String uid) async {
-  final doc = await _authService.getUserData(uid);
-  if (doc != null) {
-    _role = doc['role'];
-    print('Fetched role: $_role');  // Debugging role
-  } else {
-    print('Error fetching role');
-  }
-  notifyListeners();
-}
-
-  Future<void> signIn(String email, String password) async {
-    User? user = await _authService.loginWithEmail(email, password);
-    if (user != null) {
-      _user = user;
-      await _fetchUserRole(_user!.uid);
+  Future<void> _fetchUserData() async {
+    if (_user != null) {
+      _userModel = await _authService.getUserData(_user!.uid);
+      notifyListeners();
     }
-    notifyListeners();
   }
 
+  // Sign out
   Future<void> signOut() async {
     await _authService.logout();
     _user = null;
-    _role = null;
+    _userModel = null;
     notifyListeners();
   }
 }

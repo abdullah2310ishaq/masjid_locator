@@ -30,6 +30,7 @@ dependencies:
   geocoding: ^3.0.0
   flutter_google_maps_webservices: ^1.1.1
   geolocator: ^13.0.1
+  uuid:
 
 
 dev_dependencies:

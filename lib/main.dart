@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:masjid_locator/src/auth/pages/otp_screen.dart';
 import 'package:masjid_locator/src/auth/pages/sign_up.dart';
+import 'package:masjid_locator/src/providers/namaz_provider.dart';
 import 'package:masjid_locator/src/screens/welcome_screen.dart';
-import 'package:masjid_locator/src/providers/hijri_provider.dart';
-import 'package:masjid_locator/src/providers/prayer_provider.dart';
-import 'package:masjid_locator/src/screens/muazzins/muaddhin_page.dart';
-import 'package:masjid_locator/src/screens/users/home_page.dart';
+import 'package:masjid_locator/src/screens/muazzins/masjid_rep_home_page.dart';
+import 'package:masjid_locator/src/screens/users/user_home_page.dart';
 import 'package:masjid_locator/src/screens/users/map_screen.dart';
-import 'package:masjid_locator/src/screens/users/namaz_timings.dart';
+import 'package:masjid_locator/src/screens/users/nearby.dart';
 import 'package:provider/provider.dart';
 import 'package:masjid_locator/src/providers/auth_provider.dart';
 import 'package:masjid_locator/src/auth/pages/login_page.dart';
@@ -20,8 +20,9 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => PrayerProvider()),
-        ChangeNotifierProvider(create: (_) => HijriDateProvider()),
+
+      ChangeNotifierProvider(create: (_) => PrayerProvider()),
+    
       ],
       child: MyApp(),
     ),
@@ -37,10 +38,11 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const WelcomePage(),
         '/login': (context) => LoginPage(),
+         '/userHome': (context) => UserHomePage(),
         '/signUp': (context) => SignUpPage(),
         '/userHome': (context) => UserHomePage(),
         '/muadhinHome': (context) => MuadhinHomePage(),
-        '/prayer': (context) => PrayerScreen(),
+        // '/prayer': (context) => NearbyMosquesScreens(),
         '/map': (context) => NearbyMosquesScreen (),
         
       },

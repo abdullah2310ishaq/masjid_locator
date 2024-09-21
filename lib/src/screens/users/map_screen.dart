@@ -1,6 +1,8 @@
+import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:http/http.dart' as http; 
 
 class NearbyMosquesScreen extends StatefulWidget {
   const NearbyMosquesScreen({super.key});
@@ -14,6 +16,8 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
   LocationData? _currentLocation;
   final Location location = Location();
   LatLng? _currentPosition;
+  final String _placesApiKey = "AIzaSyDoO04B1OC_SxJfDMdwFgStxipPloCLGU8"; // Replace with your Google Places API key
+  List<Marker> _mosqueMarkers = [];
 
   @override
   void initState() {
@@ -21,7 +25,6 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
     _getCurrentLocation();
   }
 
- 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -51,7 +54,40 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
       _mapController?.moveCamera(
         CameraUpdate.newLatLng(_currentPosition!),
       );
+
+      // After getting the location, fetch nearby mosques
+      _fetchNearbyMosques();
     });
+  }
+
+  Future<void> _fetchNearbyMosques() async {
+    final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentPosition!.latitude},${_currentPosition!.longitude}&radius=1500&type=mosque&key=$_placesApiKey');
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          _mosqueMarkers = (data['results'] as List).map((place) {
+            final location = place['geometry']['location'];
+            return Marker(
+              markerId: MarkerId(place['place_id']),
+              position: LatLng(location['lat'], location['lng']),
+              infoWindow: InfoWindow(
+                title: place['name'],
+                snippet: place['vicinity'],
+              ),
+            );
+          }).toList();
+        });
+      } else {
+        print("Failed to fetch nearby mosques: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching mosques: $e");
+    }
   }
 
   @override
@@ -70,6 +106,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
               ),
               myLocationEnabled: true,
               myLocationButtonEnabled: true,
+              markers: Set<Marker>.of(_mosqueMarkers),
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
               },

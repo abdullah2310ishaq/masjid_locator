@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:masjid_locator/src/screens/muazzins/muaddhin_page.dart';
-import 'package:masjid_locator/src/screens/users/home_page.dart';
-
 import 'package:provider/provider.dart';
 import 'package:masjid_locator/src/providers/auth_provider.dart';
+import 'package:masjid_locator/src/screens/users/user_home_page.dart';
+import 'package:masjid_locator/src/screens/muazzins/masjid_rep_home_page.dart';
 
 class AuthChecker extends StatelessWidget {
   @override
@@ -12,12 +11,14 @@ class AuthChecker extends StatelessWidget {
 
     if (authProvider.user == null) {
       return const CircularProgressIndicator();  // Show loading while checking authentication
-    } else if (authProvider.role == 'muadhin') {
-      return const MuadhinHomePage();  // Navigate to Muadhin Home
-    } else if (authProvider.role == 'user') {
-      return const UserHomePage();  // Navigate to User Home
     } else {
-      return const CircularProgressIndicator();  // Fallback for other cases
+      if (authProvider.role == 'muadhin') {
+        return const MuadhinHomePage();  // Navigate to Muadhin Home
+      } else if (authProvider.role == 'user') {
+        return const UserHomePage();  // Navigate to User Home
+      } else {
+        return const CircularProgressIndicator();  // Fallback for other cases
+      }
     }
   }
 }
