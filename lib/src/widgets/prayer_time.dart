@@ -8,7 +8,8 @@ import 'package:masjid_locator/src/services/location_service.dart';
 import 'package:masjid_locator/src/services/prayer_services.dart';
 
 class PrayerTimeWidget extends StatefulWidget {
-  const PrayerTimeWidget({Key? key, required Null Function() onTap}) : super(key: key);
+  const PrayerTimeWidget({Key? key, required Null Function() onTap})
+      : super(key: key);
 
   @override
   State<PrayerTimeWidget> createState() => _PrayerTimeWidgetState();
@@ -38,7 +39,8 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
         final coordinates = LatLng(position.latitude, position.longitude);
 
         // Fetch prayer times
-        final prayerTimes = _prayerTimeService.getPrayerTimes(coordinates, Madhab.hanafi);
+        final prayerTimes =
+            _prayerTimeService.getPrayerTimes(coordinates, Madhab.hanafi);
 
         // Fetch current and next prayer info
         final currentPrayer = _prayerTimeService.getCurrentPrayer(prayerTimes);
@@ -66,7 +68,8 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
     Timer.periodic(oneMinute, (Timer timer) {
       if (_nextPrayerTime != null) {
         setState(() {
-          final nextPrayerInfo = _prayerTimeService.getNextPrayer(_prayerTimes!);
+          final nextPrayerInfo =
+              _prayerTimeService.getNextPrayer(_prayerTimes!);
           _remainingHours = nextPrayerInfo['remainingHours'];
           _remainingMinutes = nextPrayerInfo['remainingMinutes'];
 
@@ -87,46 +90,65 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        height: 170,
+        width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300),
-          color: Colors.white,
+          image: const DecorationImage(
+            image: AssetImage('assets/good.png'), // Background illustration
+            fit: BoxFit.cover,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Current prayer
-            Text(
-              'Current Prayer: $_currentPrayer',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.bottomRight,
+              end: Alignment.topRight,
+              colors: [
+                Colors.black.withOpacity(0.5), // Darker at the bottom
+                Colors.white60, // Transparent at the top
+              ],
             ),
-            const SizedBox(height: 10),
-
-            // Next prayer with countdown
-            if (_nextPrayerTime != null)
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Current prayer
               Text(
-                'Next: $_nextPrayer at ${DateFormat.jm().format(_nextPrayerTime!)}',
+                '$_currentPrayer',
                 style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
+                  fontSize: 22, // Slightly smaller font for current prayer
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // White color for contrast
                 ),
               ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 10), // Adjusted space
 
-            // Time until next prayer
-            Text(
-              'Time until next prayer: $_remainingHours hrs $_remainingMinutes mins',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
+              // Next prayer with time
+              if (_nextPrayerTime != null)
+                Text(
+                  'Next: $_nextPrayer at ${DateFormat.jm().format(_nextPrayerTime!)}',
+                  style: const TextStyle(
+                    fontSize: 16, // Slightly smaller font for time
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              const SizedBox(height: 10), // Adjusted space
+
+              // Time until next prayer
+              Text(
+                'Time until next prayer: $_remainingHours hrs $_remainingMinutes mins',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

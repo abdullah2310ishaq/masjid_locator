@@ -55,8 +55,9 @@ class PrayerTimeService {
       nextPrayer = "Isha";
       nextPrayerTime = prayerTimes.isha;
     } else {
+      // Handle next day's Fajr
       nextPrayer = "Fajr";
-      nextPrayerTime = prayerTimes.fajr;
+      nextPrayerTime = prayerTimes.fajr.add(const Duration(days: 1));
     }
 
     // Calculate the remaining time in hours and minutes

@@ -9,7 +9,7 @@ class MosqueDetailPage extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title:
-            const Text('Masjid Ibrahim', style: TextStyle(color: Colors.black)),
+            const Text('Madni Majis', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.lightBlueAccent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -82,17 +82,17 @@ class MosqueDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '1.0 Miles Away',
+            '1.0 kms Away',
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 8),
           const Text(
-            '2075 Airway Ave, Kingman, AZ 86409',
+            'Madina Market, F-8/4',
             style: TextStyle(fontSize: 16, color: Colors.black87),
           ),
           const SizedBox(height: 8),
           const Text(
-            '(1928) 583-2295',
+            '+923462207429',
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 12),
@@ -120,7 +120,7 @@ class MosqueDetailPage extends StatelessWidget {
       child: Column(
         children: [
           _buildPrayerTimeRow('Fajr', '6:14 AM', '6:35 AM'),
-          _buildPrayerTimeRow('Dhuhr', '12:40 PM', '1:00 PM'),
+          _buildPrayerTimeRow('Zuhr', '12:40 PM', '1:00 PM'),
           _buildPrayerTimeRow('Asr', '3:56 PM', '4:00 PM'),
           _buildPrayerTimeRow('Maghrib', '5:34 PM', '5:39 PM'),
           _buildPrayerTimeRow('Isha', '7:00 PM', '7:15 PM'),
