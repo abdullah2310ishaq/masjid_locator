@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:masjid_locator/src/auth/pages/otp_screen.dart';
 import 'package:masjid_locator/src/auth/pages/sign_up.dart';
-import 'package:masjid_locator/src/providers/namaz_provider.dart';
 import 'package:masjid_locator/src/screens/welcome_screen.dart';
 import 'package:masjid_locator/src/screens/muazzins/masjid_rep_home_page.dart';
 import 'package:masjid_locator/src/screens/users/user_home_page.dart';
@@ -21,7 +20,6 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
 
-      ChangeNotifierProvider(create: (_) => PrayerProvider()),
     
       ],
       child: MyApp(),

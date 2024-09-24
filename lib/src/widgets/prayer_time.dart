@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:adhan/adhan.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,7 +8,7 @@ import 'package:masjid_locator/src/services/location_service.dart';
 import 'package:masjid_locator/src/services/prayer_services.dart';
 
 class PrayerTimeWidget extends StatefulWidget {
-  const PrayerTimeWidget({Key? key}) : super(key: key);
+  const PrayerTimeWidget({Key? key, required Null Function() onTap}) : super(key: key);
 
   @override
   State<PrayerTimeWidget> createState() => _PrayerTimeWidgetState();
@@ -35,32 +34,33 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
 
   Future<void> _fetchPrayerTimes() async {
     try {
-      // Get user location (coordinates)
+      // Fetching user's current location
       Position? position = await _locationService.getCurrentPosition();
       if (position != null) {
         setState(() {
           _coordinates = LatLng(position.latitude, position.longitude);
         });
 
-        // Calculate prayer times
+        // Fetching prayer times based on location
         final prayerTimes = _prayerTimeService.getPrayerTimes(
           _coordinates!,
-          Madhab.hanafi, // Default Madhab
+          Madhab.hanafi, // Using Hanafi calculation method
         );
+
+        // Fetching current and next prayer information
+        final currentPrayer = _prayerTimeService.getCurrentPrayer(prayerTimes);
+        final nextPrayerInfo = _prayerTimeService.getNextPrayer(prayerTimes);
 
         setState(() {
           _prayerTimes = prayerTimes;
-          _currentPrayer = _prayerTimeService.getCurrentPrayer(prayerTimes);
-
-          // Get next prayer and remaining time
-          final nextPrayerInfo = _prayerTimeService.getNextPrayer(prayerTimes);
+          _currentPrayer = currentPrayer;
           _nextPrayer = nextPrayerInfo['nextPrayer'];
           _nextPrayerTime = nextPrayerInfo['time'];
           _remainingHours = nextPrayerInfo['remainingHours'];
           _remainingMinutes = nextPrayerInfo['remainingMinutes'];
         });
 
-        // Start the countdown timer
+        // Start countdown for the next prayer
         _startCountdownTimer();
       }
     } catch (e) {
@@ -69,17 +69,17 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
   }
 
   void _startCountdownTimer() {
-    // Update the countdown every minute
     const oneMinute = Duration(minutes: 1);
     Timer.periodic(oneMinute, (Timer timer) {
       setState(() {
         if (_nextPrayerTime != null) {
+          // Recalculate the remaining time for the next prayer
           final nextPrayerInfo =
               _prayerTimeService.getNextPrayer(_prayerTimes!);
           _remainingHours = nextPrayerInfo['remainingHours'];
           _remainingMinutes = nextPrayerInfo['remainingMinutes'];
 
-          // If the countdown reaches zero, fetch new prayer times
+          // If time reaches zero, fetch new prayer times
           if (_remainingHours == 0 && _remainingMinutes == 0) {
             _fetchPrayerTimes();
           }
@@ -96,65 +96,88 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Display Current Prayer
-          _buildPrayerCard("Current Prayer: $_currentPrayer", Icons.access_time),
-          const SizedBox(height: 20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.transparent, // Transparent background
+          border: Border.all(color: Colors.black, width: 1), // Black border
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Current prayer information
+            Row(
+              children: [
+                Icon(Icons.access_time, color: Colors.black, size: 30),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Current Prayer: $_currentPrayer',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-          // Display Next Prayer and Countdown
-          _buildPrayerCard(
-            "Next Prayer: $_nextPrayer",
-            Icons.schedule,
-            additionalInfo:
-                "Time: ${DateFormat.jm().format(_nextPrayerTime!)} | Countdown: $_remainingHours hrs $_remainingMinutes mins",
-          ),
-        ],
+            // Next prayer information
+            Row(
+              children: [
+                Icon(Icons.schedule, color: Colors.orangeAccent, size: 30),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _nextPrayerTime != null
+                      ? Text(
+                          'Next Prayer: $_nextPrayer at ${DateFormat.jm().format(_nextPrayerTime!)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.black54,
+                          ),
+                        )
+                      : const Text("Calculating next prayer..."),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Countdown to next prayer
+            _buildCountdownRow(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPrayerCard(String title, IconData icon,
-      {String? additionalInfo}) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 40, color: Colors.blue),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (additionalInfo != null)
-                    const SizedBox(height: 5),
-                  if (additionalInfo != null)
-                    Text(
-                      additionalInfo,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                ],
+  // Widget to display the countdown timer until the next prayer
+  Widget _buildCountdownRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Time until next prayer:',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
-            ),
-          ],
+              Text(
+                '$_remainingHours hrs $_remainingMinutes mins',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+        const Icon(Icons.watch_later_outlined, color: Colors.black54),
+      ],
     );
   }
 }

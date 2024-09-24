@@ -4,33 +4,32 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class PrayerTimeService {
   // Method to get prayer times for the current day based on coordinates and madhab
   PrayerTimes getPrayerTimes(LatLng coordinates, Madhab madhab) {
-    final params = CalculationMethod.karachi.getParameters(); // You can adjust this
+    final params = CalculationMethod.karachi.getParameters();
     params.madhab = madhab;
 
     // Calculate prayer times for today based on the coordinates
-    final prayerTimes = PrayerTimes.today(
+    return PrayerTimes.today(
       Coordinates(coordinates.latitude, coordinates.longitude),
       params,
     );
-
-    return prayerTimes;
   }
 
   // Method to get the current prayer
   String getCurrentPrayer(PrayerTimes prayerTimes) {
     final now = DateTime.now();
-    if (now.isBefore(prayerTimes.fajr)) {
+
+    if (now.isAfter(prayerTimes.fajr) && now.isBefore(prayerTimes.dhuhr)) {
       return "Fajr";
-    } else if (now.isBefore(prayerTimes.dhuhr)) {
+    } else if (now.isAfter(prayerTimes.dhuhr) && now.isBefore(prayerTimes.asr)) {
       return "Dhuhr";
-    } else if (now.isBefore(prayerTimes.asr)) {
+    } else if (now.isAfter(prayerTimes.asr) && now.isBefore(prayerTimes.maghrib)) {
       return "Asr";
-    } else if (now.isBefore(prayerTimes.maghrib)) {
+    } else if (now.isAfter(prayerTimes.maghrib) && now.isBefore(prayerTimes.isha)) {
       return "Maghrib";
-    } else if (now.isBefore(prayerTimes.isha)) {
+    } else if (now.isAfter(prayerTimes.isha) || now.isBefore(prayerTimes.fajr)) {
       return "Isha";
     } else {
-      return "Fajr"; // If it's after Isha, Fajr is next
+      return "Fajr"; // If it's after Isha, Fajr is next (for next day)
     }
   }
 
