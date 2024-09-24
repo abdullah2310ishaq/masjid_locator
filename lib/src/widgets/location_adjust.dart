@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart'; // Import Geolocator
-import 'package:geocoding/geocoding.dart'; // Import Geocoding for reverse geocoding
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class LocationAdjustWidget extends StatefulWidget {
   @override
@@ -10,17 +10,16 @@ class LocationAdjustWidget extends StatefulWidget {
 
 class _LocationAdjustWidgetState extends State<LocationAdjustWidget> {
   GoogleMapController? _mapController;
-  Marker? _currentMarker; // Marker for the current location
-  LatLng? _currentLatLng; // Store the current LatLng
-  String? _currentAddress; // Address based on marker position
+  Marker? _currentMarker;
+  LatLng? _currentLatLng;
+  String? _currentAddress;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation(); // Fetch user's current location on load
+    _getCurrentLocation();
   }
 
-  // Fetch the current location using Geolocator
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -42,48 +41,40 @@ class _LocationAdjustWidgetState extends State<LocationAdjustWidget> {
 
     setState(() {
       _currentLatLng = LatLng(position.latitude, position.longitude);
-      _addMarker(_currentLatLng!); // Add marker after getting location
-      _moveCameraToPosition(_currentLatLng!); // Move camera to the current position
-      _getAddressFromLatLng(_currentLatLng!); // Fetch the address for this position
+      _addMarker(_currentLatLng!);
+      _moveCameraToPosition(_currentLatLng!);
+      _getAddressFromLatLng(_currentLatLng!);
     });
   }
 
-  // Move the Google Maps camera to a specific position
   void _moveCameraToPosition(LatLng position) {
     _mapController?.animateCamera(
       CameraUpdate.newLatLng(position),
     );
   }
 
-  // Handle marker drag end to update the current position and address
   void _onMarkerDragEnd(LatLng newPosition) {
     setState(() {
       _currentLatLng = newPosition;
-      _addMarker(newPosition); // Update the marker position
-      _getAddressFromLatLng(newPosition); // Fetch address after drag
+      _addMarker(newPosition);
+      _getAddressFromLatLng(newPosition);
     });
   }
 
-  // Add marker and ensure it is draggable
   void _addMarker(LatLng position) {
     _currentMarker = Marker(
       markerId: const MarkerId("currentLocation"),
       position: position,
-      draggable: true, // Ensure the marker is draggable
-      onDragEnd: _onMarkerDragEnd, // Handle marker drag
+      draggable: true,
+      onDragEnd: _onMarkerDragEnd,
     );
-
-    // Set the marker on the map
-    setState(() {
-      // Force UI update with new marker
-    });
   }
 
-  // Fetch address from latitude and longitude using Geocoding
   Future<void> _getAddressFromLatLng(LatLng position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude, position.longitude,
+        position.latitude,
+        position.longitude,
       );
 
       Placemark place = placemarks[0];
@@ -98,12 +89,11 @@ class _LocationAdjustWidgetState extends State<LocationAdjustWidget> {
     }
   }
 
-  // Handle tapping on the map to move the marker to a new location
   void _onMapTapped(LatLng tappedPosition) {
     setState(() {
-      _currentLatLng = tappedPosition; // Update current position
-      _addMarker(tappedPosition); // Move marker to tapped position
-      _getAddressFromLatLng(tappedPosition); // Fetch address for new location
+      _currentLatLng = tappedPosition;
+      _addMarker(tappedPosition);
+      _getAddressFromLatLng(tappedPosition);
     });
   }
 
@@ -111,40 +101,87 @@ class _LocationAdjustWidgetState extends State<LocationAdjustWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Adjust Location"),
+        title: const Text("Select Your Location"),
+        backgroundColor: Colors.teal,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: Column(
         children: [
           _currentLatLng == null
-              ? const CircularProgressIndicator() // Show a loading indicator while fetching location
+              ? const Center(child: CircularProgressIndicator())
               : Expanded(
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _currentLatLng!,
-                      zoom: 15.0,
-                    ),
-                    markers: _currentMarker != null
-                        ? {_currentMarker!} // Add marker to the map
-                        : {},
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                    },
-                    onTap: _onMapTapped, // Handle tap on the map to move the marker
+                  child: Stack(
+                    children: [
+                      GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _currentLatLng!,
+                          zoom: 15.0,
+                        ),
+                        markers:
+                            _currentMarker != null ? {_currentMarker!} : {},
+                        onMapCreated: (GoogleMapController controller) {
+                          _mapController = controller;
+                        },
+                        onTap: _onMapTapped,
+                      ),
+                      Positioned(
+                        top: 20,
+                        right: 10,
+                        child: FloatingActionButton(
+                          backgroundColor: Colors.teal,
+                          child: const Icon(Icons.my_location),
+                          onPressed: () =>
+                              _moveCameraToPosition(_currentLatLng!),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
           Container(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              _currentAddress ?? "Fetching address...",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Return the selected location to the previous screen
-              Navigator.pop(context, _currentLatLng);
-            },
-            child: const Text("Confirm Location"),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(
+                  _currentAddress ?? "Fetching address...",
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context, _currentLatLng);
+                  },
+                  icon: const Icon(Icons.check_circle),
+                  label: const Text("Confirm Location"),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14.0, horizontal: 32.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.transparent,
+                    side: const BorderSide(color: Colors.black, width: 2),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

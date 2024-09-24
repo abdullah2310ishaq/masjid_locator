@@ -24,7 +24,6 @@ dependencies:
   location: ^6.0.2
   adhan: ^2.0.0+1
   intl: ^0.19.0
-  hijri: ^3.0.0
   google_maps_flutter: ^2.9.0
   flutter_polyline_points: ^2.1.0
   geocoding: ^3.0.0
@@ -40,3 +39,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/

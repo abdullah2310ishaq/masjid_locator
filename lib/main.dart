@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:masjid_locator/src/auth/pages/otp_screen.dart';
 import 'package:masjid_locator/src/auth/pages/sign_up.dart';
+import 'package:masjid_locator/src/screens/users/mosque_detail.dart';
 import 'package:masjid_locator/src/screens/welcome_screen.dart';
 import 'package:masjid_locator/src/screens/muazzins/masjid_rep_home_page.dart';
 import 'package:masjid_locator/src/screens/users/user_home_page.dart';
-import 'package:masjid_locator/src/screens/users/map_screen.dart';
-import 'package:masjid_locator/src/screens/users/nearby.dart';
+
 import 'package:provider/provider.dart';
 import 'package:masjid_locator/src/providers/auth_provider.dart';
 import 'package:masjid_locator/src/auth/pages/login_page.dart';
@@ -40,9 +39,7 @@ class MyApp extends StatelessWidget {
         '/signUp': (context) => SignUpPage(),
         '/userHome': (context) => UserHomePage(),
         '/muadhinHome': (context) => MuadhinHomePage(),
-        // '/prayer': (context) => NearbyMosquesScreens(),
-        '/map': (context) => NearbyMosquesScreen (),
-        
+        '/detail':(context)=> MosqueDetailPage(mosqueName: '',),
       },
     );
   }

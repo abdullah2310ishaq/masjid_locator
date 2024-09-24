@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:masjid_locator/src/screens/users/map_screen.dart';
+import 'package:masjid_locator/src/screens/users/mosque_detail.dart'; // Import MosqueDetailPage
 import 'package:masjid_locator/src/widgets/location_adjust.dart';
 import 'package:masjid_locator/src/widgets/location_widget.dart';
 import 'package:masjid_locator/src/services/auth_service.dart';
-import 'package:masjid_locator/src/services/location_service.dart';
+import 'package:masjid_locator/src/services/location_service.dart'; // Import the extracted MosqueCard widget
+import 'package:masjid_locator/src/widgets/mosque_nearme.dart';
 import 'package:masjid_locator/src/widgets/prayer_time.dart';
 
 class UserHomePage extends StatefulWidget {
@@ -21,6 +22,30 @@ class _UserHomePageState extends State<UserHomePage> {
 
   Position? _currentPosition;
   String? _currentAddress;
+
+  // Sample mosque data
+  List<Map<String, String>> mosques = [
+    {
+      "mosqueName": "Masjid Ibrahim",
+      "currentPrayer": "Dhuhr",
+      "nextPrayerTime": "Asr: 3:56 PM"
+    },
+    {
+      "mosqueName": "Madni Masjid",
+      "currentPrayer": "Fajr",
+      "nextPrayerTime": "Dhuhr: 12:45 PM"
+    },
+    {
+      "mosqueName": "Makki Masjid",
+      "currentPrayer": "Isha",
+      "nextPrayerTime": "Fajr: 6:00 AM"
+    },
+    {
+      "mosqueName": "University Masjid",
+      "currentPrayer": "Maghrib",
+      "nextPrayerTime": "Isha: 7:00 PM"
+    }
+  ];
 
   @override
   void initState() {
@@ -40,6 +65,7 @@ class _UserHomePageState extends State<UserHomePage> {
         );
         setState(() {
           _currentAddress = address;
+          // You can update the mosque list dynamically based on location here.
         });
       }
     } catch (e) {
@@ -100,9 +126,24 @@ class _UserHomePageState extends State<UserHomePage> {
             const SizedBox(height: 40),
             _buildNearbyMosquesHeader(),
             const SizedBox(height: 10),
-            _buildMosqueCard('Madni Masjid', 'Madina Market', () {
-              _openDirections();
-            }),
+
+            // Swipable row of mosque cards
+            SizedBox(
+              height: 200, // Set a height to make cards visible
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: mosques.length,
+                itemBuilder: (context, index) {
+                  final mosque = mosques[index];
+                  return MosqueCard(
+                    mosqueName: mosque["mosqueName"]!,
+                    currentPrayer: mosque["currentPrayer"]!,
+                    nextPrayerTime: mosque["nextPrayerTime"]!,
+                    onTap: () => _openMosqueDetails(context, mosque["mosqueName"]!),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -128,67 +169,13 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  Widget _buildMosqueCard(
-      String mosqueName, String mosqueAddress, VoidCallback onTap) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.lightBlue.shade200, width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  mosqueName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  mosqueAddress,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: onTap,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              backgroundColor: Colors.lightBlueAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Get Directions',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
+  void _openMosqueDetails(BuildContext context, String mosqueName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MosqueDetailPage(mosqueName: mosqueName),
       ),
     );
-  }
-
-  void _openDirections() {
-  
-    print('Opening directions...');
   }
 
   void _logout() async {
