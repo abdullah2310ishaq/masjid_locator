@@ -11,7 +11,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _selectedRole = 'user'; // Default role is user
+  String _selectedRole = 'user'; // Default role is 'user'
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,8 @@ class _SignUpPageState extends State<SignUpPage> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              
+
+              // Full Name Input
               CustomTextField(
                 controller: _nameController,
                 labelText: 'Full Name',
@@ -36,7 +37,8 @@ class _SignUpPageState extends State<SignUpPage> {
                 labelColor: Colors.blue,
               ),
               const SizedBox(height: 20),
-              
+
+              // Phone Number Input
               CustomTextField(
                 controller: _phoneController,
                 labelText: 'Phone Number',
@@ -45,15 +47,17 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 20),
 
+              // Password Input
               CustomTextField(
                 controller: _passwordController,
                 labelText: 'Password',
                 obscureText: true,
-                labelColor: Colors.blue, 
+                labelColor: Colors.blue,
                 keyboardType: TextInputType.visiblePassword,
               ),
               const SizedBox(height: 20),
 
+              // Role Selection (Dropdown)
               DropdownButtonFormField<String>(
                 value: _selectedRole,
                 decoration: const InputDecoration(
@@ -72,12 +76,13 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 40),
 
+              // Send OTP Button
               ElevatedButton(
                 onPressed: _sendOTP,
                 child: const Text('Send OTP'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 15.0, horizontal: 100.0),
+                      vertical: 15.0, horizontal: 100.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
@@ -90,13 +95,14 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  // Send OTP to the user's phone number
+  // Method to send OTP
   void _sendOTP() {
     String name = _nameController.text.trim();
     String phone = _phoneController.text.trim();
     String password = _passwordController.text.trim();
 
     if (name.isNotEmpty && phone.isNotEmpty && password.isNotEmpty) {
+      // Navigate to the OTP Screen with the user details
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -104,8 +110,7 @@ class _SignUpPageState extends State<SignUpPage> {
             phoneNumber: phone,
             name: name,
             password: password,
-            role: _selectedRole, 
-            // verificationId: '',
+            role: _selectedRole,
           ),
         ),
       );
@@ -114,9 +119,10 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  // Display SnackBar messages
+  // Display SnackBar
   void _showSnackbar(BuildContext context, String message) {
-    final snackBar = SnackBar(content: Text(message), backgroundColor: Colors.red);
+    final snackBar =
+        SnackBar(content: Text(message), backgroundColor: Colors.red);
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

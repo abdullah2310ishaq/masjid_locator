@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:masjid_locator/src/screens/users/mosque_detail.dart'; // Import MosqueDetailPage
+import 'package:masjid_locator/src/screens/users/mosque_detail.dart';
 import 'package:masjid_locator/src/services/auth_service.dart';
 import 'package:masjid_locator/src/services/location_service.dart';
 import 'package:masjid_locator/src/widgets/location_adjust.dart';
+import 'package:masjid_locator/src/widgets/location_widget.dart';
 import 'package:masjid_locator/src/widgets/mosque_nearme.dart';
 import 'package:masjid_locator/src/widgets/prayer_time.dart';
+import 'package:masjid_locator/src/widgets/prayer_timeline.dart';
 
 class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
@@ -22,7 +24,6 @@ class _UserHomePageState extends State<UserHomePage> {
   Position? _currentPosition;
   String? _currentAddress;
 
-  // Sample mosque data
   List<Map<String, String>> mosques = [
     {
       "mosqueName": "Masjid Ibrahim",
@@ -113,81 +114,43 @@ class _UserHomePageState extends State<UserHomePage> {
       ),
       body: Column(
         children: [
-          _buildFixedLocationWidget(),
-
-          // Rest of the page scrollable
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: FixedLocationWidget(
+              location: _currentAddress,
+              onTap: _openLocationAdjustScreen,
+            ),
+          ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  PrayerTimelineWidget(),
+                  const SizedBox(height: 10),
                   PrayerTimeWidget(onTap: () {}),
-                  const SizedBox(height: 40),
-
+                  const SizedBox(height: 30),
                   _buildNearbyMosquesHeader(),
                   const SizedBox(height: 10),
-
-                  // Horizontally scrollable mosque cards
-                  SizedBox(
-                    height: 200, // Set a height to make cards visible
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: mosques.length,
-                      itemBuilder: (context, index) {
-                        final mosque = mosques[index];
-                        return MosqueCard(
-                          mosqueName: mosque["mosqueName"]!,
-                          currentPrayer: mosque["currentPrayer"]!,
-                          nextPrayerTime: mosque["nextPrayerTime"]!,
-                          onTap: () => _openMosqueDetails(
-                              context, mosque["mosqueName"]!),
-                        );
-                      },
-                    ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: mosques.length,
+                    itemBuilder: (context, index) {
+                      final mosque = mosques[index];
+                      return MosqueCard(
+                        mosqueName: mosque["mosqueName"]!,
+                        currentPrayer: mosque["currentPrayer"]!,
+                        nextPrayerTime: mosque["nextPrayerTime"]!,
+                        onTap: () =>
+                            _openMosqueDetails(context, mosque["mosqueName"]!),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFixedLocationWidget() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.lightBlueAccent,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _currentAddress ?? "Fetching location...",
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.location_on_sharp,
-              color: Colors.white,
-              size: 40,
-            ),
-            onPressed: _openLocationAdjustScreen,
           ),
         ],
       ),

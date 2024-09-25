@@ -36,7 +36,7 @@ class _OTPScreenState extends State<OTPScreen> {
     });
   }
 
-  // Verify OTP and register the user
+  // Verify OTP and Register User
   void _verifyOTP() async {
     String otp = _otpController.text.trim();
     if (_verificationId != null && otp.isNotEmpty) {
@@ -82,6 +82,7 @@ class _OTPScreenState extends State<OTPScreen> {
             ),
             const SizedBox(height: 20),
 
+            // OTP Input
             TextField(
               controller: _otpController,
               decoration: InputDecoration(
@@ -94,6 +95,7 @@ class _OTPScreenState extends State<OTPScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Verify OTP Button
             ElevatedButton(
               onPressed: _isLoading ? null : _verifyOTP,
               child: _isLoading ? CircularProgressIndicator() : Text('Verify OTP'),

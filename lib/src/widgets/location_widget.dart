@@ -1,65 +1,70 @@
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-// class LocationWidget extends StatefulWidget {
-//   final String? location;
-//   final String defaultMessage;
-//   final VoidCallback onTap;
-//   final Color color;
+class FixedLocationWidget extends StatelessWidget {
+  final String? location;
+  final VoidCallback onTap;
 
-//   const LocationWidget({
-//     Key? key,
-//     required this.location,
-//     this.defaultMessage = "Fetching location...",
-//     required this.onTap,
-//     this.color = const Color(0xFF80DEEA),
-//   }) : super(key: key);
+  const FixedLocationWidget({
+    Key? key,
+    required this.location,
+    required this.onTap,
+  }) : super(key: key);
 
-//   @override
-//   State<LocationWidget> createState() => _LocationWidgetState();
-// }
-
-// class _LocationWidgetState extends State<LocationWidget> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return GestureDetector(
-//       onTap: widget.onTap,
-//       child: Container(
-//         margin: const EdgeInsets.symmetric(vertical: 12),
-//         decoration: BoxDecoration(
-//           color: widget.color.withOpacity(0.9),
-//           border: Border.all(color: Colors.white, width: 1),
-//           borderRadius: BorderRadius.circular(12),
-//         ),
-//         child: Padding(
-//           padding: const EdgeInsets.all(16.0),
-//           child: Row(
-//             crossAxisAlignment: CrossAxisAlignment.center,
-//             children: [
-//               const Icon(
-//                 Icons.location_on,
-//                 size: 40,
-//                 color: Colors.black,
-//               ),
-//               const SizedBox(width: 12),
-//               Expanded(
-//                 child: Text(
-//                   widget.location ?? widget.defaultMessage,
-//                   style: const TextStyle(
-//                     fontSize: 18,
-//                     fontWeight: FontWeight.w600,
-//                     color: Colors.white,
-//                   ),
-//                 ),
-//               ),
-//               const Icon(
-//                 Icons.edit_location,
-//                 size: 40,
-//                 color: Colors.black,
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9), // Subtle white background
+        borderRadius: BorderRadius.circular(25), // Rounded corners
+        border: Border.all(
+            color: Colors.lightBlueAccent,
+            width: 1.5), // Border with light blue accent
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1), // Soft shadow
+            blurRadius: 12,
+            offset: const Offset(0, 5), // Shadow effect
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.location_on,
+            color: Colors.lightBlueAccent,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              location ?? "Fetching location...",
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.black87, // Dark text for readability
+                fontWeight: FontWeight
+                    .w500, // Medium font weight for a professional look
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.lightBlueAccent
+                    .withOpacity(0.15), // Light blue background for button
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.edit_location_alt, // A modern location edit icon
+                color: Colors.lightBlueAccent,
+                size: 24,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

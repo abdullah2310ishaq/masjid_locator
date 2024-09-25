@@ -18,8 +18,6 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-
-    
       ],
       child: MyApp(),
     ),
@@ -35,11 +33,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const WelcomePage(),
         '/login': (context) => LoginPage(),
-         '/userHome': (context) => UserHomePage(),
+        '/userHome': (context) => UserHomePage(),
         '/signUp': (context) => SignUpPage(),
         '/userHome': (context) => UserHomePage(),
         '/muadhinHome': (context) => MuadhinHomePage(),
-        '/detail':(context)=> MosqueDetailPage(mosqueName: '',),
+        '/detail': (context) => MosqueDetailPage(
+              mosqueName: '',
+            ),
       },
     );
   }
