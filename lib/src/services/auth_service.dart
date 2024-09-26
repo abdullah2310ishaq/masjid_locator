@@ -1,105 +1,94 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:masjid_locator/src/models/user_model.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Register user after OTP verification
-  Future<void> registerUser(UserModel userModel) async {
+  // Utility to hash password using SHA-256
+  String hashPassword(String password) {
+    var bytes = utf8.encode(password); // Convert password to bytes
+    var digest = sha256.convert(bytes); // Hash using SHA-256
+    return digest.toString(); // Return hashed password as a string
+  }
+
+  // Register a new user with Email and Password
+  Future<UserModel?> registerWithEmailAndPassword(String email, String password, String name, String role) async {
     try {
-      await _firestore.collection('users').doc(userModel.id).set(userModel.toMap());
+      // Check if the email already exists in Firestore
+      UserModel? existingUser = await getUserByEmail(email);
+      if (existingUser != null) {
+        throw Exception('An account with this email already exists.');
+      }
+
+      // Register the user in Firebase Auth
+      UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = result.user;
+      if (user != null) {
+        String hashedPassword = hashPassword(password);
+
+        // Create a new user document in Firestore
+        UserModel newUser = UserModel(
+          id: user.uid,
+          name: name,
+          email: email,
+          phoneNumber: null, // No phone number since it's email-based
+          role: role,
+          password: hashedPassword,
+        );
+        await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+
+        return newUser;
+      }
+      return null;
     } catch (e) {
-      print('Error registering user: $e');
+      print('Error registering with email: $e');
       throw e;
     }
   }
 
-  // Get user data by phone number
-  Future<UserModel?> getUserByPhoneNumber(String phoneNumber) async {
+  // Log in the user using email and password
+  Future<User?> loginWithEmailAndPassword(String email, String password) async {
+    try {
+      UserCredential result = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return result.user;
+    } catch (e) {
+      print('Error logging in with email: $e');
+      throw e;
+    }
+  }
+
+  // Fetch user by email from Firestore
+  Future<UserModel?> getUserByEmail(String email) async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection('users')
-          .where('phoneNumber', isEqualTo: phoneNumber)
+          .where('email', isEqualTo: email)
           .limit(1)
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        return UserModel.fromMap(
-            snapshot.docs.first.data() as Map<String, dynamic>, snapshot.docs.first.id);
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching user by phone number: $e');
-      return null;
-    }
-  }
-
-  // Login with phone number and password
-  Future<User?> loginWithPhoneNumberAndPassword(String phoneNumber, String password) async {
-    try {
-      // Get user by phone number
-      UserModel? userModel = await getUserByPhoneNumber(phoneNumber);
-      if (userModel != null && userModel.password == password) {
-        // Use phone number as an email-like identifier for password login
-        String emailForLogin = '${userModel.phoneNumber}@example.com';
-        
-        // If password matches, sign in the user using Firebase Email/Password method
-        return _auth.signInWithEmailAndPassword(
-          email: emailForLogin,
-          password: userModel.password, // Password from Firestore
-        ).then((userCredential) => userCredential.user);
+        return UserModel.fromMap(snapshot.docs.first.data() as Map<String, dynamic>, snapshot.docs.first.id);
       } else {
-        throw Exception("Invalid phone number or password");
+        return null; // No user found
       }
     } catch (e) {
-      print('Error logging in with phone number and password: $e');
-      throw e;
+      print('Error fetching user by email: $e');
+      return null;
     }
   }
 
-  // Send OTP to the phone number
-  Future<void> sendOTP(String phoneNumber, Function(String) onCodeSent) async {
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          print('Verification failed: ${e.message}');
-          throw e.message ?? 'Verification failed';
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          onCodeSent(verificationId);
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          onCodeSent(verificationId);
-        },
-      );
-    } catch (e) {
-      print('Error sending OTP: $e');
-      throw e;
-    }
-  }
-
-  // Verify OTP and sign in user
-  Future<User?> verifyOTP(String verificationId, String otp) async {
-    try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: otp,
-      );
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      return userCredential.user;
-    } catch (e) {
-      print('Error verifying OTP: $e');
-      throw e;
-    }
-  }
-
-  // Logout
+  // Logout the user
   Future<void> logout() async {
     try {
       await _auth.signOut();

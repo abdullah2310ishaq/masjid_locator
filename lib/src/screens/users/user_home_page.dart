@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:masjid_locator/src/providers/auth_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:masjid_locator/src/screens/users/mosque_detail.dart';
-import 'package:masjid_locator/src/services/auth_service.dart';
+import 'package:masjid_locator/src/screens/users/nearby.dart';
 import 'package:masjid_locator/src/services/location_service.dart';
 import 'package:masjid_locator/src/widgets/location_adjust.dart';
 import 'package:masjid_locator/src/widgets/location_widget.dart';
@@ -18,9 +20,7 @@ class UserHomePage extends StatefulWidget {
 }
 
 class _UserHomePageState extends State<UserHomePage> {
-  final AuthService _authService = AuthService();
   final LocationService _locationService = LocationService();
-
   Position? _currentPosition;
   String? _currentAddress;
 
@@ -92,6 +92,10 @@ class _UserHomePageState extends State<UserHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Accessing user details via AuthProvider
+    final authProvider = Provider.of<AuthProvider>(context);
+    final String userName = authProvider.userModel?.name ?? 'User'; // Default to 'User' if name is null
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -114,6 +118,17 @@ class _UserHomePageState extends State<UserHomePage> {
       ),
       body: Column(
         children: [
+          // Welcome message with the user's name
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Welcome, $userName!',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: FixedLocationWidget(
@@ -121,6 +136,19 @@ class _UserHomePageState extends State<UserHomePage> {
               onTap: _openLocationAdjustScreen,
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Two buttons to navigate to pages
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NearbyMosquesMap()), // Navigate to Nearby Mosques Screen
+              );
+            },
+            child: const Text('Find Nearby Mosques'),
+          ),
+
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(10.0),
@@ -178,7 +206,7 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   void _logout() async {
-    await _authService.logout();
+    await Provider.of<AuthProvider>(context, listen: false).signOut();
     Navigator.pushReplacementNamed(context, '/login');
   }
 }

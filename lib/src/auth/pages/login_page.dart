@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:masjid_locator/src/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:masjid_locator/src/providers/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -8,99 +8,121 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Login')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'Login with Phone and Password',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Login',
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Phone Number Field
-              TextField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
+                // Email Field
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Password Field
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
                 ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading ? CircularProgressIndicator() : Text('Login'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 100.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+                // Login Button
+                ElevatedButton(
+                  onPressed: authProvider.isLoading
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            _loginWithEmail(authProvider);
+                          }
+                        },
+                  child: authProvider.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Login'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 100.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
                   ),
                 ),
-              ),
-            ],
+
+                // Show error if any
+                if (authProvider.error != null)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      authProvider.error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // Redirect to SignUp
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account?"),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/signUp'); // Navigate to SignUpPage
+                      },
+                      child: const Text('Sign Up'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Login with phone number and password
-  void _login() async {
-    String phoneNumber = _phoneController.text.trim();
+  // Login with email and password
+  void _loginWithEmail(AuthProvider authProvider) {
+    String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
-
-    if (phoneNumber.isNotEmpty && password.isNotEmpty) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        User? user = await _authService.loginWithPhoneNumberAndPassword(phoneNumber, password);
-        if (user != null) {
-          Navigator.pushReplacementNamed(context, '/userHome');
-        }
-      } catch (e) {
-        _showSnackbar('Login failed: ${e.toString()}');
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } else {
-      _showSnackbar('Please enter both phone number and password.');
-    }
-  }
-
-  void _showSnackbar(String message) {
-    final snackBar = SnackBar(content: Text(message), backgroundColor: Colors.red);
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    authProvider.loginWithEmail(email, password, context);
   }
 }

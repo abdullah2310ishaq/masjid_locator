@@ -94,15 +94,15 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(2.0),
       child: Container(
         height: 220, // Increased height for horizontal design
         width: double.infinity, // Full width of the screen
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           image: const DecorationImage(
-            image: AssetImage('assets/best.jpg'), // Background illustration
-            fit: BoxFit.cover,
+            image: AssetImage('assets/abc.png'), // Background illustration
+            fit: BoxFit.fitWidth,
           ),
         ),
         child: Container(
@@ -111,10 +111,10 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               begin: Alignment.bottomRight,
-              end: Alignment.topRight,
+              end: Alignment.center,
               colors: [
-                Colors.black.withOpacity(0.6), // Darker at the bottom
-                Colors.transparent, // Transparent at the top
+                Colors.black.withOpacity(0.2), // Darker at the bottom
+                Colors.white30, // Transparent at the top
               ],
             ),
           ),
@@ -126,7 +126,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                 'Current Time: ${DateFormat.jm().format(_currentTime)}',
                 style: const TextStyle(
                   fontSize: 20, // Time display font
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 12), // Adjusted space
@@ -137,7 +137,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                 style: const TextStyle(
                   fontSize: 24, // Bigger font for current prayer
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // White color for contrast
+                  color: Colors.black, // White color for contrast
                 ),
               ),
               const SizedBox(height: 12),
@@ -148,7 +148,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                   'Next: $_nextPrayer at ${DateFormat.jm().format(_nextPrayerTime!)}',
                   style: const TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -159,7 +159,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                 'Time until next prayer: $_remainingHours hrs $_remainingMinutes mins',
                 style: const TextStyle(
                   fontSize: 18,
-                  color: Colors.white,
+                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),

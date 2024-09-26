@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:masjid_locator/src/auth/pages/sign_up.dart';
+import 'package:masjid_locator/src/providers/location_provider.dart';
 import 'package:masjid_locator/src/screens/users/mosque_detail.dart';
 import 'package:masjid_locator/src/screens/welcome_screen.dart';
 import 'package:masjid_locator/src/screens/muazzins/masjid_rep_home_page.dart';
@@ -18,7 +19,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
+     ],
       child: MyApp(),
     ),
   );
