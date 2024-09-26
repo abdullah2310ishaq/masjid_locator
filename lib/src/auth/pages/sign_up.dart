@@ -19,125 +19,154 @@ class _SignUpPageState extends State<SignUpPage> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      backgroundColor: Colors.grey.shade800,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Create an Account',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
+            child: Card(
+              elevation: 8.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Create Your Account',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.lightBlue),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Join us and find nearby mosques!',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
 
-                // Name Field
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.name,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                    // Name Field
+                    _buildTextField(
+                      controller: _nameController,
+                      labelText: 'Full Name',
+                      validatorMessage: 'Please enter your name',
+                    ),
+                    const SizedBox(height: 20),
 
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    } else if (!RegExp(r'^[\w-]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                    // Email Field
+                    _buildTextField(
+                      controller: _emailController,
+                      labelText: 'Email',
+                      validatorMessage: 'Please enter a valid email',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
 
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    } else if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                    // Password Field
+                    _buildTextField(
+                      controller: _passwordController,
+                      labelText: 'Password',
+                      validatorMessage:
+                          'Please enter a password of at least 6 characters',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 20),
 
-                // Role Selection Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: 'Select Role',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'user', child: Text('Regular User')),
-                    DropdownMenuItem(value: 'muadhin', child: Text('Muadhin')),
+                    // Role Selection - Toggle Buttons for better UX
+                    const Text('Select Role',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    ToggleButtons(
+                      isSelected: [
+                        _selectedRole == 'user',
+                        _selectedRole == 'muadhin'
+                      ],
+                      onPressed: (int index) {
+                        setState(() {
+                          _selectedRole = index == 0 ? 'user' : 'muadhin';
+                        });
+                      },
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text('Regular User',
+                              style: TextStyle(fontSize: 16)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child:
+                              Text('Muadhin', style: TextStyle(fontSize: 16)),
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10),
+                      borderColor: Colors.blue,
+                      selectedBorderColor: Colors.blue,
+                      fillColor: Colors.blue.withOpacity(0.2),
+                      selectedColor: Colors.blue.shade800,
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Sign Up Button
+                    ElevatedButton(
+                      onPressed: authProvider.isLoading
+                          ? null
+                          : () {
+                              if (_formKey.currentState!.validate()) {
+                                _signUpWithEmail(authProvider);
+                              }
+                            },
+                      child: authProvider.isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('Sign Up',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlue.shade800,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15.0, horizontal: 100.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Show error if any
+                    if (authProvider.error != null)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          authProvider.error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+
+                    // Link to Login Page
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Already have an account?",
+                            style: TextStyle(fontSize: 16)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                                context, '/login'); // Navigate to LoginPage
+                          },
+                          child: const Text('Log In',
+                              style:
+                                  TextStyle(color: Colors.blue, fontSize: 16)),
+                        ),
+                      ],
+                    ),
                   ],
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedRole = newValue!;
-                    });
-                  },
                 ),
-                const SizedBox(height: 40),
-
-                // Sign Up Button
-                ElevatedButton(
-                  onPressed: authProvider.isLoading
-                      ? null
-                      : () {
-                          if (_formKey.currentState!.validate()) {
-                            _signUpWithEmail(authProvider);
-                          }
-                        },
-                  child: authProvider.isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Sign Up'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 100.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                ),
-
-                // Show error if any
-                if (authProvider.error != null)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      authProvider.error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
@@ -150,6 +179,36 @@ class _SignUpPageState extends State<SignUpPage> {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String name = _nameController.text.trim();
-    authProvider.registerWithEmail(email, password, name, _selectedRole, context);
+    authProvider.registerWithEmail(
+        email, password, name, _selectedRole, context);
+  }
+
+  // Helper function to build text fields with validation
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required String validatorMessage,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: OutlineInputBorder(),
+      ),
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return validatorMessage;
+        }
+        if (labelText == 'Email' &&
+            !RegExp(r'^[\w-]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value)) {
+          return 'Please enter a valid email';
+        }
+        return null;
+      },
+    );
   }
 }
