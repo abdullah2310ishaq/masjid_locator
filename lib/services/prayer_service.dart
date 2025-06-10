@@ -1,66 +1,55 @@
+// lib/src/services/prayer_service.dart
 import 'package:adhan/adhan.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
-class PrayerTimeService {
-  // Method to get prayer times for the current day based on coordinates and madhab
-  PrayerTimes getPrayerTimes(LatLng coordinates, Madhab madhab) {
+class PrayerService {
+  PrayerTimes getPrayerTimes(Position position) {
+    final coordinates = Coordinates(position.latitude, position.longitude);
     final params = CalculationMethod.karachi.getParameters();
-    params.madhab = madhab;
-
-    // Calculate prayer times for today based on the coordinates
-    return PrayerTimes.today(
-      Coordinates(coordinates.latitude, coordinates.longitude),
-      params,
-    );
+    params.madhab = Madhab.hanafi; // For Islamabad users
+    return PrayerTimes.today(coordinates, params);
   }
 
-  // Method to get the current prayer
   String getCurrentPrayer(PrayerTimes prayerTimes) {
     final now = DateTime.now();
-
     if (now.isAfter(prayerTimes.fajr) && now.isBefore(prayerTimes.dhuhr)) {
-      return "Fajr";
+      return 'Fajr';
     } else if (now.isAfter(prayerTimes.dhuhr) && now.isBefore(prayerTimes.asr)) {
-      return "Dhuhr";
+      return 'Zuhr';
     } else if (now.isAfter(prayerTimes.asr) && now.isBefore(prayerTimes.maghrib)) {
-      return "Asr";
+      return 'Asr';
     } else if (now.isAfter(prayerTimes.maghrib) && now.isBefore(prayerTimes.isha)) {
-      return "Maghrib";
-    } else if (now.isAfter(prayerTimes.isha) || now.isBefore(prayerTimes.fajr)) {
-      return "Isha";
+      return 'Maghrib';
     } else {
-      return "Fajr"; // If it's after Isha, Fajr is next (for next day)
+      return 'Isha';
     }
   }
 
-  // Method to get the next prayer and the remaining time
   Map<String, dynamic> getNextPrayer(PrayerTimes prayerTimes) {
     final now = DateTime.now();
     DateTime nextPrayerTime;
     String nextPrayer;
 
     if (now.isBefore(prayerTimes.fajr)) {
-      nextPrayer = "Fajr";
+      nextPrayer = 'Fajr';
       nextPrayerTime = prayerTimes.fajr;
     } else if (now.isBefore(prayerTimes.dhuhr)) {
-      nextPrayer = "Dhuhr";
+      nextPrayer = 'Zuhr';
       nextPrayerTime = prayerTimes.dhuhr;
     } else if (now.isBefore(prayerTimes.asr)) {
-      nextPrayer = "Asr";
+      nextPrayer = 'Asr';
       nextPrayerTime = prayerTimes.asr;
     } else if (now.isBefore(prayerTimes.maghrib)) {
-      nextPrayer = "Maghrib";
+      nextPrayer = 'Maghrib';
       nextPrayerTime = prayerTimes.maghrib;
     } else if (now.isBefore(prayerTimes.isha)) {
-      nextPrayer = "Isha";
+      nextPrayer = 'Isha';
       nextPrayerTime = prayerTimes.isha;
     } else {
-      // Handle next day's Fajr
-      nextPrayer = "Fajr";
+      nextPrayer = 'Fajr';
       nextPrayerTime = prayerTimes.fajr.add(const Duration(days: 1));
     }
 
-    // Calculate the remaining time in hours and minutes
     final remainingTime = nextPrayerTime.difference(now);
     final hours = remainingTime.inHours;
     final minutes = remainingTime.inMinutes % 60;

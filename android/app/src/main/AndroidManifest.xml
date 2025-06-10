@@ -23,6 +23,9 @@
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
+
+         
+             
               />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -34,7 +37,7 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <meta-data android:name="com.google.android.geo.API_KEY"
+        <meta-data android:name="com.google.android.geo.AIzaSyB41n7uZUSAdM1H6LeaiN6QBq1cmydR_4I"
             android:value="AIzaSyB41n7uZUSAdM1H6LeaiN6QBq1cmydR_4I"/>
         
     </application>
